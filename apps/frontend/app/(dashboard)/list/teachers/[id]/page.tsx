@@ -1,12 +1,9 @@
 import Image from "next/image";
-
-import { Poppins } from "next/font/google";
 import BigCalender from "@/app/components/BigCalender";
 import Link from "next/link";
 import Announcement from "@/app/components/Announcement";
 import PerfomanceChart from "@/app/components/PerfomanceChart";
-
-
+import FormModal from "@/app/components/FormModel";
 
  const SinglePage = () => {
   return (
@@ -27,8 +24,27 @@ import PerfomanceChart from "@/app/components/PerfomanceChart";
                />
               </div>
               <div className="w-2/3 flex flex-col justify-between gap-4 text-white">
-              <h1 className="text-3xl font-bold text-white ">Ankur Kumar</h1>
-              <p className="text-white font-bold text-sm">Lorem ipsum, dolor sit amet consectetur adipisicing elit.</p>
+              <h1 className="text-3xl font-bold text-white">Ankur Kumar</h1>
+              <FormModal 
+              table="teacher" 
+              type="update"
+               data={{
+                id: 1,  
+                username :"viasjdnf",
+                email: "defggen@gmail.com",
+                password : "password",
+                firstName: "joe",
+                lastName: "gold berg",
+                phone: "+1 3938439847",
+                address: "123 Main st, anyone, usa",
+                bloodType: "A+",
+                dateofBirth: "2000-01-01",
+                sex : "male",
+                img : "https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?auto=compress&cs=tinysrgb&w=1200",
+               }}/>
+              <p className="text-white font-bold text-sm">
+                Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+                </p>
               <div className="flex items-center justify-between gap-2 flex-wrap text-xs mt-3 font-medium">
                 <div className="w-full md:w-1/3 lg:w-full flex items-center gap-2">
                 <Image src="/blood.png" className="bg-amber-50 rounded-full p-1" alt="" width={20} height={20}/>
@@ -46,7 +62,6 @@ import PerfomanceChart from "@/app/components/PerfomanceChart";
                 <Image src="/phone.png" alt="" className="bg-amber-50 rounded-full p-1"  width={20}  height={20}/>
                 <span>298475298475</span>
                 </div>
-            
               </div>
               </div>
             </div>

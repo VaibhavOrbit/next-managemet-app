@@ -73,13 +73,13 @@ model Grade {
   level Int @unique
 
   students Student[]
-  classess Class[]
+  classess Class[]      
 }
 
 model Class {
   id       Int    @id @default(autoincrement())
   name     String @unique
-  capacity Int
+  capacity  Int
 
   supervisorId  String?
   supervisor    Teacher?       @relation(fields: [supervisorId], references: [id])
@@ -104,7 +104,6 @@ model Lesson {
   day       Day
   startTime DateTime
   endTime   DateTime
-
   subjectId   Int
   subject     Subject      @relation(fields: [subjectId], references: [id])
   classId     Int

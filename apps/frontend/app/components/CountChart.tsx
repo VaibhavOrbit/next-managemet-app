@@ -5,7 +5,7 @@ import { RadialBarChart, RadialBar, Legend, ResponsiveContainer } from 'recharts
 import Image from 'next/image';
 
 const data = [
-      {
+    {
     name: 'Total',
     count: 100,
     fill: 'white',
