@@ -1,10 +1,18 @@
 import FormModal from "@/app/components/FormModel"
+
 import Pagination from "@/app/components/Paginatioin"
 import Table from "@/app/components/Table"
 import { TableSearch } from "@/app/components/TableSearch"
 import { role, teachersData } from "@/app/lib/data"
 import Image from "next/image"
 import Link from "next/link"
+import { prismaClient } from "@repo/db/client";
+// import { Class, Prisma, Subject, Teacher } from "@repo/db/client";
+
+import { Subject } from "@repo/db/";
+
+
+type  TeacherList  = Teacher & {subjects: Subject[]} & {classes: Class[]}
 
 const columns = [
   {
@@ -42,21 +50,9 @@ const columns = [
   }
 ];
 
-type Teacher = {
-    id:number,
-    teacherId:string,
-    name: string;
-    email?: string;
-    phone:string;
-    subjects: string[];
-    classes:string[];
-    address:string;
-    photo: string
-    
-}
 
 
- const TeacherListPage = () => {
+const TeacherListPage = () => {
 
   const renderRow = (item: Teacher) => (
     <tr

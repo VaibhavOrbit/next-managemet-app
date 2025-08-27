@@ -10,7 +10,7 @@ import UserCard from "@/app/components/UserCard";
   return (
     <div className="p-4 flex gap-4 flex-col md:flex-row">
       {/* Left */}
-          <div className="w-full lg:w-2/3 gap-8 flex flex-col gap-8 "> 
+          <div className="w-full lg:w-2/3 gap-8 flex flex-col gap-8 ">  
           <div className="flex gap-4 justify-between flex-wrap">
               <UserCard title="student" date="28/2/25" number="2000" />
               <UserCard title="teacher" date="28/2/25" number="100"/>
