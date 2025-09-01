@@ -1,19 +1,19 @@
-    import FormModal from "@/app/components/FormModel";
+import FormModal from "@/app/components/FormModel";
 import Pagination from "@/app/components/Paginatioin";
 import Table from "@/app/components/Table";
 import { TableSearch } from "@/app/components/TableSearch";
 import { assignmentsData, classesData, examsData, lessonsData, parentsData, role } from "@/app/lib/data";
-
+import { Assignment, Class, Prisma, Subject, Teacher } from "@prisma/client";
+import { prisma } from "@repo/db/client";
 import Image from "next/image";
 import Link from "next/link";
 
-type exam = {
-id: number;
-subject: string;
-class: string;
-teacher: string;
-dueDate: string;
-
+type AssignmentList = Assignment & {
+  lesson: {
+    subject: Subject;
+    class: Class;
+    teacher: Teacher;
+  };
 };
 
 const columns = [
@@ -43,16 +43,17 @@ const columns = [
   },
 ];
 
-const ExamListPage = () => {
-  const renderRow = (item: exam) => (
+const renderRow = (item: AssignmentList) => (
     <tr
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-blue-100"
     >  
-      <td className="flex items-center gap-4 p-4">{item.subject}</td>
-      <td >{item.class}</td>
-      <td className="hidden md:table-cell">{item.teacher}</td>
-      <td className="hidden md:table-cell">{item.dueDate}</td>
+      <td className="flex items-center gap-4 p-4">{item.lesson.subject.name}</td>
+      <td >{item.lesson.class.name}</td>
+      <td className="hidden md:table-cell">{item.lesson.teacher.name}</td>
+      <td className="hidden md:table-cell">
+                {new Intl.DateTimeFormat("en-US").format(item.dueDate)}
+      </td>
       <td>
         <div className="flex itmes-center gap-2">
             <Link href={`/list/teacher/${item.id}`}>
@@ -70,7 +71,61 @@ const ExamListPage = () => {
     
       </td>
     </tr>
-  );
+);
+
+const AssignmentPage =async ({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | undefined };
+}) => {
+  
+  const { page, ...queryParams } = searchParams;
+
+   const p = page ? parseInt(page) : 1;
+
+
+   const query : Prisma.AssignmentWhereInput = {};
+
+   query.lesson = {};
+
+ if (queryParams) {
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (value !== undefined) {
+        switch (key) {
+          case "classId":
+            query.lesson.classId = parseInt(value);
+            break;
+          case "teacherId":
+            query.lesson.teacherId = value;
+            break;
+          case "search":
+            query.lesson.subject = {
+              name: { contains: value, mode: "insensitive" },
+            };
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+    const [data, count] = await prisma.$transaction([
+    prisma.assignment.findMany({
+      where: query,
+      include: {
+        lesson: {
+          select: {
+            subject: { select: { name: true } },
+            teacher: { select: { name: true, surname: true } },
+            class:   { select: { name: true } },
+          },
+        },
+      },
+      take: 10,
+      skip: 10 * (p - 1),
+    }),
+    prisma.assignment.count({ where: query }),
+  ]);
 
   return (
     <div className="bg-white p-4 rounde-md flex-1 m-4 mt-0">
@@ -93,11 +148,11 @@ const ExamListPage = () => {
         </div>
       </div>
       {/* LIST */}
-      <Table columns={columns} renderRow={renderRow} data={assignmentsData} />
+       <Table columns={columns} renderRow={renderRow} data={data} />
       {/* PAGINATION */}
-      <Pagination />
+      <Pagination page={p} count={count} />
     </div>
   );
 };
 
-export default ExamListPage;
+export default AssignmentPage;

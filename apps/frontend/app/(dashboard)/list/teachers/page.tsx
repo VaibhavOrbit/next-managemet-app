@@ -1,15 +1,12 @@
 import FormModal from "@/app/components/FormModel"
-
 import Pagination from "@/app/components/Paginatioin"
 import Table from "@/app/components/Table"
 import { TableSearch } from "@/app/components/TableSearch"
 import { role, teachersData } from "@/app/lib/data"
 import Image from "next/image"
 import Link from "next/link"
-import { prismaClient } from "@repo/db/client";
-import { Teacher, Subject, Class } from "@prisma/client"; 
-import { AwardIcon } from "lucide-react"
-
+import { prisma } from "@repo/db/client";
+import { Teacher, Subject, Class, Prisma } from "@prisma/client"; 
 
 type  TeacherList  = Teacher & {subjects: Subject[]} & {classes: Class[]}
 
@@ -94,11 +91,57 @@ const columns = [
     </tr>
   );
 
-const TeacherListPage = async () => {
+const TeacherListPage = async ({
+      searchParams,
+    }: {
+      searchParams:{ [key:string]:string | undefined};
+    }) => {
+    const {page, ...queryParams} = searchParams;
 
-      const teacher = await prismaClient.teacher.findMany();
-       
-      console.log(teacher);
+    const p = page ? parseInt(page) : 1; 
+
+    //URL PARAMS CONDITION
+
+    const query: Prisma.TeacherWhereInput  = {}; 
+
+    if(queryParams) {
+      for(const [key, value] of Object.entries(queryParams)){
+        if(value !== undefined){
+          switch (key) {
+            case "classId":
+              query.lessons = {
+                some: {
+                  classId: parseInt(value),
+                },
+              };
+              break;
+              case "search" :
+                query.name = {contains: value, mode: "insensitive"};
+             break;
+             default:
+            break;
+          }
+        }
+      }
+    }
+
+
+
+  const [data , count] = await prisma.$transaction([
+  prisma.teacher.findMany({
+    where : query,
+    include: {
+      subjects: true,
+      classes: true
+    },
+    take:10,
+    skip: 10 * (p-1),
+  }),
+   prisma.teacher.count({where:query}),
+]);
+
+
+  console.log(count);
 
 
   return (
@@ -123,11 +166,11 @@ const TeacherListPage = async () => {
         </div>
        {/* LIST */}
       <div className="p-3">
-        <Table columns={columns} renderRow={renderRow} data={teachersData}/>
+        <Table columns={columns} renderRow={renderRow} data={data}/>
       </div>
          {/* PAGINATION */}
       <div className="">
-        <Pagination/>
+        <Pagination page={p} count={count}  />
       </div>
      
     </div>
