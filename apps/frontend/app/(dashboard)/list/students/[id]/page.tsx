@@ -123,8 +123,9 @@ import FormModal from "@/app/components/FormModel";
                <Link className="p-3 rounded-md bg-red-100" href={`/list/teachers?classId=${2}`}>Stundent&apos;s Teachers</Link>
                <Link className="p-3 rounded-md bg-yellow-100" href="/">Student&apos;s Exams</Link>
                <Link className="p-3 rounded-md bg-green-100" href="/">Student&apos;s Assignments</Link>
-               <Link className="p-3 rounded-md bg-green-100" href="/">Student&apos;s Results</Link>
-
+               <Link className="p-3 rounded-md bg-green-100" href={`/list/results?studentId=${"student2"}`}>
+               Student&apos;s Results
+               </Link>
             </div>
             </div>
             <PerfomanceChart/>

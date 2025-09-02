@@ -5,51 +5,48 @@ import { TableSearch } from "@/app/components/TableSearch";
 import {  resultsData, role, studentsData } from "@/app/lib/data";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@repo/db/client";
-import { assert } from "console";
-import { SUPPORTED_NATIVE_MODULES } from "next/dist/build/webpack/plugins/middleware-plugin";
-import { Quicksand } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
-import { includes } from "zod";
 
-type exam = {
-id: number;
-subject: string;
-class: string;
-teacher: string;
-student: string;
-date: string;
-score: string;
+type ResultList = {
+  id: number;
+  title: string;
+  studentName: string;
+  studentSurname: string;
+  teacherName: string;
+  teacherSurname: string;
+  score: number;
+  className: string;
+  startTime: Date;
 };
 
 const columns = [
   {
-    header: "Subject name",
-    accessor: "name",
- 
+    header: "Title",
+    accessor: "title",
   },
   {
-    header: "Class ",
-    accessor: "capacity",
+    header: "Student ",
+    accessor: "student",
   },
   {
-    header: "Teacher",
-    accessor: "Teacher",
+    header: "Score",
+    accessor: "score",
     className: "hidden md:table-cell",
   },
     {
-    header: "Student",
-    accessor: "student",
+    header: "Teacher",
+    accessor: "teacher",
     className: "hidden md:table-cell",
   },
-     {
-    header: "date",
+  {
+    header: "Class",
+    accessor: "class",
+    className: "hidden md:table-cell",
+  },
+    {
+    header: "Date",
     accessor: "date",
-    className: "hidden md:table-cell",
-  },
-      {
-    header: "score",
-    accessor: "scpre",
     className: "hidden md:table-cell",
   },
 
@@ -59,18 +56,23 @@ const columns = [
   },
 ];
 
-const renderRow = (item: exam) => (
+const renderRow = (item: ResultList) => (
     <tr
       key={item.id}
       className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-blue-100"
     >  
-      <td className="flex items-center gap-4 p-4">{item.subject}</td>
-      <td >{item.class}</td>
-      <td className="hidden md:table-cell">{item.teacher}</td>
-      <td className="hidden md:table-cell">{item.student}</td>
+      <td className="flex items-center gap-4 p-4">{item.title}</td>
+     <td>{item.studentName + " " + item.studentName}</td>
       <td className="hidden md:table-cell">{item.score}</td>
+      <td className="hidden md:table-cell">
+        {item.teacherName + " " + item.teacherSurname}
+      </td>
+<td className="hidden md:table-cell">{item.className}</td>
 
-      <td className="hidden md:table-cell">{item.date}</td>
+      <td className="hidden md:table-cell">
+              {new Intl.DateTimeFormat("en-US").format(item.startTime)}
+
+      </td>
 
       <td>
         <div className="flex itmes-center gap-2">
@@ -97,37 +99,33 @@ const ResultListPage =  async ({
        searchParams:{ [key:string]:string | undefined};
 }) => {
 
-     const {page, ...queryParams} = searchParams;
-  
+      const {page, ...queryParams} = searchParams;
       const p = page ? parseInt(page) : 1; 
       //URL PARAMS CONDITION
-      const query: Prisma.TeacherWhereInput  = {}; 
+        const query: Prisma.ResultWhereInput = {};
 
-        if(queryParams) {
-          for(const [key, value] of Object.entries(queryParams)) {
-            if(value !== undefined) {
-              switch (key) {
-                case "classId":
-                  query.lesson = {classId: parseInt(value)};
-                  break;
-                  case "teacherId":
-                    query.lesson = {
-                      teacherId: value,
-                    };
-                    break;
-                    case "search": 
-                    query.lesson = {
-                      subject: {
-                        name: {contains: value, mode: "insensitive"},
-                      },
-                    };
-                    break;
-                }
-             }
+    if (queryParams) {
+      for (const [key, value] of Object.entries(queryParams)) {
+        if (value !== undefined) {
+          switch (key) {
+            case "studentId":
+              query.studentId = value;
+              break;
+            case "search":
+              query.OR = [
+                { exam: { title: { contains: value, mode: "insensitive" } } },
+                { student: { name: { contains: value, mode: "insensitive" } } },
+              ];
+              break;
+            default:
+              break;
           }
         }
+      }
+    }
 
-          const [dataRes, count] = await prisma.$transaction([
+
+   const [dataRes, count] = await prisma.$transaction([
             prisma.result.findMany({
               where: query,
               include: {
@@ -165,21 +163,20 @@ const ResultListPage =  async ({
 
             if(!assessment) return null
 
-            const isExam = "startTime" in assessment;
+      const isExam = "startTime" in assessment;
 
-            return{
-              id: item.id,
-              title:assessment.title,
-              studentName:item.student.name,
-              studentSurname: item.student.surname,
-              teacherName: assessment.lesson.teacher.name,
-              teacherSurname: assessment.lesson.teacher.surname, 
-              score: item.score,
-              className:assessment.lesson.class.name,
-              startTime:isExam ? assessment.startTime : assessment.startDate,
-            };
-
-          });
+      return {
+        id: item.id,
+        title: assessment.title,
+        studentName: item.student.name,
+        studentSurname: item.student.surname,
+        teacherName: assessment.lesson.teacher.name,
+        teacherSurname: assessment.lesson.teacher.surname,
+        score: item.score,
+        className: assessment.lesson.class.name,
+        startTime: isExam ? assessment.startTime : assessment.startDate,
+      };
+    });
 
 
 
@@ -187,7 +184,7 @@ const ResultListPage =  async ({
     <div className="bg-white p-4 rounde-md flex-1 m-4 mt-0">
       {/* TOP */}
       <div className="flex items-center justify-between">
-        <h1 className="hidden md:block text-lg font-semibold">All Assignments</h1>
+        <h1 className="hidden md:block text-lg font-semibold">All Results</h1>
         <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
           <TableSearch />
           <div className="flex items-center gap-4 self-end">
@@ -203,7 +200,7 @@ const ResultListPage =  async ({
           </div>
         </div>
       </div>
-      {/* LIST */}
+        {/* LIST */}
       <Table columns={columns} renderRow={renderRow} data={data} />
       {/* PAGINATION */}
       <Pagination page={p} count={count}/>
