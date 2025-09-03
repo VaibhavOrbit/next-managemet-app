@@ -11,7 +11,6 @@ const StudentForm = dynamic(()=>import("./forms/StudentForm"),{
      loading: ()=><h1>Loading...</h1>
 })
 
-
 const forms:{[key:string]: (type: "create" | "update", data?:any)=>JSX.Element;
 }={
     teacher: (type, data) => <TeacherForm type={type} data={data} />,

@@ -87,6 +87,7 @@ const ExamListPage = async ({
 
 
    const { page, ...queryParams } = searchParams;
+
    const p = page ? parseInt(page): 1;
    const query: Prisma.ExamWhereInput = {};
 
@@ -102,7 +103,7 @@ const ExamListPage = async ({
             query.lesson.teacherId = value;
             break;
           case "search":
-            query.lesson.subject = {
+            query.lesson.subject = {  
               name: { contains: value, mode: "insensitive" },
             };
             break;

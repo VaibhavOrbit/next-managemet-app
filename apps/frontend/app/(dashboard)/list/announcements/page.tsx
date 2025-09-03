@@ -3,8 +3,11 @@ import Pagination from "@/app/components/Paginatioin"
 import Table from "@/app/components/Table"
 import { TableSearch } from "@/app/components/TableSearch"
 import { announcementsData, eventsData, role, teachersData } from "@/app/lib/data"
+import { Announcement, Class, Prisma } from "@prisma/client"
+import { prisma } from "@repo/db/client"
 import Image from "next/image"
-import Link from "next/link"
+
+type announcementList = Announcement & {class: Class}
 
 const columns = [
   {
@@ -12,50 +15,37 @@ const columns = [
     accessor: "info"
   }, 
   {
-     header    : "title",
-     accessor : "teacherId", 
+     header    : "Class",
+     accessor : "class", 
      className :"hidden md:table-cell"
   },
     {
-     header    : "class",
-     accessor : "subjects", 
+     header    : "Date",
+     accessor : "date", 
      className :"hidden md:table-cell"
   },
    {
-     header    : "date",
+     header    : "Action",
      accessor : "classes", 
      className :"hidden md:table-cell"
   },
 ];
 
-type announcement = {
-    id:number,
-    title:string,
-    class: string;
-    date?: string;
-    startTime:string;
-    endTime: string[];
-  
-}
-
-
-const AnnouncementsListPage = () => {
-
-  const renderRow = (item: announcement) => (
+const renderRow = (item: announcementList) => (
     <tr
      key={item.id}
      className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-blue-200"
      >
       <td className="flex items-center  gap-4 p-4">
-     
-            <div className="flex flex-col"> 
-              <h3 className="font-semibold">{item.title}</h3>
-            </div>
+        <div className="flex flex-col"> 
+            <h3 className="font-semibold">{item.title}</h3>
+         </div>
       </td>
-      <td className="hidden   md:table-cell" > {item.title}</td >
-      <td className="hidden  md:table-cell" >{item.class}</td >
-      <td className="hidden  md:table-cell" >{item.date}</td >
-      
+      <td className="hidden   md:table-cell" > {item.class.name}</td >
+      <td className="hidden  md:table-cell">
+       {new Intl.DateTimeFormat("en-US").format(item.date)}
+        </td>
+
       <td>
         <div className="flex items-center gap-2">
           {role === "admin" && (
@@ -67,8 +57,46 @@ const AnnouncementsListPage = () => {
         </div>
       </td>
     </tr>
-  );
+);
 
+
+const AnnouncementsListPage = async ({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | undefined };
+}) => {
+
+   const { page, ...queryParams } = searchParams;
+  
+   const p = page ? parseInt(page): 1;
+
+    const query: Prisma.AnnouncementWhereInput = {};
+
+    if(queryParams){
+      for(const [key, value] of Object.entries(queryParams)){
+        if(value !== undefined){
+          switch (key){
+            case "search":
+              query.title = {contains: value, mode: "insensitive"};
+              break;
+              default:
+              break;
+          }
+        }
+      }
+    }
+
+    const [data, count] = await prisma.$transaction([
+      prisma.announcement.findMany({
+        where: query,
+        include: {
+          class: true,
+        },
+        take: 10,
+        skip: 10 * (p-1)
+      }),
+      prisma.announcement.count({where: query})
+    ])
 
 
   return (
@@ -89,17 +117,17 @@ const AnnouncementsListPage = () => {
             {role === "admin" && (
               <FormModal table="teacher" type="create"/>
             )}
-   
+
           </div>
         </div>
       </div>
        {/* LIST */}
       <div className="p-3">
-        <Table columns={columns} renderRow={renderRow} data={announcementsData}/>
+        <Table columns={columns} renderRow={renderRow} data={data}/>
       </div>
          {/* PAGINATION */}
       <div className="">
-        <Pagination/>
+        <Pagination page={p} count={count}/>
       </div>
      
     </div>

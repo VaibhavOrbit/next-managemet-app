@@ -96,7 +96,9 @@ const TeacherListPage = async ({
     }: {
       searchParams:{ [key:string]:string | undefined};
     }) => {
-    const {page, ...queryParams} = searchParams;
+     
+
+    const {page, ...queryParams} = searchParams;  
 
     const p = page ? parseInt(page) : 1; 
 
@@ -141,7 +143,7 @@ const TeacherListPage = async ({
 ]);
 
 
-  console.log(count);
+
 
 
   return (
